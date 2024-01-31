@@ -39,6 +39,14 @@ void test_ring_buffer() {
     }
     assert(rb_full(&rb));
 
+    // Test 8: Check if writing to a full buffer discards the message
+   // Attempt to write more data to the full buffer
+    rb_put(&rb, 42);  // This should be discarded
+
+    // Verify that the buffer is still full and the head position did not change
+    assert(rb_full(&rb));
+    assert(rb_peek(&rb) != 42);  // Ensure that the value written after the buffer is full is not present
+
 
     printf("All tests passed!\n");
 }
