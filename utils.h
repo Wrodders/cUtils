@@ -231,6 +231,8 @@ static int mysprintf(char *buf, uint8_t dp, char *format, ...){
         }
     }
     va_end(args);
+   
+    buf[bIdx++] = '\0';
     return bIdx;
 }
 
