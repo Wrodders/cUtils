@@ -1,7 +1,7 @@
 # Ignore build artifacts
 /build/
 
-*.dSYM/*
+*.dSYM/
 
 # Ignore executables
 *.exe
