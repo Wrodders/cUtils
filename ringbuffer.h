@@ -18,12 +18,9 @@
 Byte Ring Buffer Implantation, buffer size must be a power of 2 
 */
 
-
-
-
 typedef struct RingBuffer{
     volatile uint8_t * const buf;
-    volatile size_t size;
+    const size_t size;
     volatile uint8_t write;
     volatile uint8_t read;
 }RingBuffer;
