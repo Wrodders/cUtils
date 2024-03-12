@@ -15,7 +15,7 @@ typedef struct RingBuffer {
     size_t mask; // Mask for wrapping around the buffer
 } RingBuffer;
 
-RingBuffer rbInit(void* buf, const size_t size, const size_t elementSize) {
+static RingBuffer rbInit(void* buf, const size_t size, const size_t elementSize) {
     RingBuffer rb;
     rb.buf = buf;
     rb.size = size;
@@ -27,18 +27,18 @@ RingBuffer rbInit(void* buf, const size_t size, const size_t elementSize) {
 }
 
 // Function to check if the ring buffer is empty
-bool rbEmpty(const RingBuffer *rb) {
+static bool rbEmpty(const RingBuffer *rb) {
     return rb->read == rb->write;
 }
 
 // Function to check if the ring buffer is full
-bool rbFull(const RingBuffer *rb) {
+static bool rbFull(const RingBuffer *rb) {
     size_t nextIndex = (rb->write + 1) & rb->mask; // Calculate the next index
     return nextIndex == rb->read; // Buffer is full if next index is the read index
 }
 
 /// Core function for putting data into the buffer
-bool rbPut(RingBuffer *rb, const void *data) {
+static bool rbPut(RingBuffer *rb, const void *data) {
     if (rbFull(rb)) {
         return false; // Buffer is full, cannot add more data
     }
@@ -60,7 +60,7 @@ bool rbPut(RingBuffer *rb, const void *data) {
 }
 
 // Core function for getting data from the buffer
-bool rbGet(RingBuffer *rb, void *data) {
+static bool rbGet(RingBuffer *rb, void *data) {
     if (rbEmpty(rb)) {
         return false; // Buffer is empty, cannot retrieve data
     }
@@ -82,7 +82,7 @@ bool rbGet(RingBuffer *rb, void *data) {
 }
 
 // Core function for peeking at the next data in the buffer
-bool rbPeek(const RingBuffer *rb, void *data) {
+static bool rbPeek(const RingBuffer *rb, void *data) {
     if (rbEmpty(rb)) {
         return false; // Buffer is empty, cannot peek data
     }
@@ -100,11 +100,11 @@ bool rbPeek(const RingBuffer *rb, void *data) {
     return true; // Data peeked successfully
 }
 
-void rbClear(RingBuffer *rb) {
+static void rbClear(RingBuffer *rb) {
     rb->write = rb->read = 0;
 }
 
-void rbFill(RingBuffer *rb, void *value) {
+static void rbFill(RingBuffer *rb, void *value) {
     if (rb == NULL || value == NULL) {
         return; // Check for NULL pointers
     }
