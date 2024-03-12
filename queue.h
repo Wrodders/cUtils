@@ -25,7 +25,7 @@ struct NAME {                                                                   
   uint16_t write_idx;                                                                   \
   ITEM_TYPE items[NUM_ITEMS];                                                           \
 };                                                                                      \
-void NAME ## _init(struct NAME * p_queue);                                              \
+void NAME ##_init(struct NAME * p_queue);                                               \
 enum enqueue_result NAME ##_enqueue(struct NAME * p_queue, ITEM_TYPE * p_new_item);     \
 enum dequeue_result NAME ##_dequeue(struct NAME * p_queue, ITEM_TYPE * p_item_out);     \
 bool NAME ##_is_empty(struct NAME * p_queue);

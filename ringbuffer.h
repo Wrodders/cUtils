@@ -1,74 +1,130 @@
 #ifndef RING_BUFFER_H
 #define RING_BUFFER_H
 
-#ifndef UINT8_T_DEFINED
-#define UINT8_T_DEFINED
-#include <stdint.h> 
-#endif 
-#ifndef BOOT_DEFINED
-#define BOOL_DEFINED
-#include <stdbool.h> 
-#endif 
-#ifndef SIZE_T_DEFINED
-#define SIZE_T_DEFINED
-#include <stddef.h> 
-#endif
+#include <stdint.h>
+#include <stdbool.h>
+#include <stddef.h>
 
-/*
-Byte Ring Buffer Implantation, buffer size must be a power of 2 
-*/
+// Define the RingBuffer struct
+typedef struct RingBuffer {
+    void* buf;
+    size_t size; // Total size of buffer in bytes
+    size_t elementSize; // Size of each element in bytes
+    size_t write;
+    size_t read;
+    size_t mask; // Mask for wrapping around the buffer
+} RingBuffer;
 
-typedef struct RingBuffer{
-    volatile uint8_t * const buf;
-    const size_t size;
-    volatile uint8_t write;
-    volatile uint8_t read;
-}RingBuffer;
-
-static RingBuffer rb_init( uint8_t * const buf, size_t size){
-    //@Brief: Create Ring Buffer
-    RingBuffer rb = {
-        .buf = buf,
-        .size = size,
-        .write = 0,
-        .read = 0
-    };
+RingBuffer rbInit(void* buf, const size_t size, const size_t elementSize) {
+    RingBuffer rb;
+    rb.buf = buf;
+    rb.size = size;
+    rb.elementSize = elementSize;
+    rb.write = 0;
+    rb.read = 0;
+    rb.mask = size - 1; // Initialize the mask
     return rb;
 }
 
-static bool rb_empty(const RingBuffer *rb){
-    //@Brief: Check if ring buffer is empty
+// Function to check if the ring buffer is empty
+bool rbEmpty(const RingBuffer *rb) {
     return rb->read == rb->write;
 }
 
-static bool rb_full(const RingBuffer *rb){
-    //@Brief: Check if ring buffer is full
-    //@Note: Writing to a full buffer will overwrite data
-    uint8_t nextIdx = (rb->write + 1) & (rb->size - 1); // using bitwise AND for wrap-around
-    return nextIdx == rb->read; 
+// Function to check if the ring buffer is full
+bool rbFull(const RingBuffer *rb) {
+    size_t nextIndex = (rb->write + 1) & rb->mask; // Calculate the next index
+    return nextIndex == rb->read; // Buffer is full if next index is the read index
 }
 
+/// Core function for putting data into the buffer
+bool rbPut(RingBuffer *rb, const void *data) {
+    if (rbFull(rb)) {
+        return false; // Buffer is full, cannot add more data
+    }
 
-static bool rb_put( RingBuffer *rb, const uint8_t data){
-    //@Brief: Add one byte to ring buffer
-    
-    if(rb_full(rb)){return false;}
-    rb->buf[rb->write] = data;
-    rb->write = (rb->write +1) & (rb->size -1); // bitmask wrap around
-    return true;
+    uint8_t *buffer = (uint8_t*)(rb->buf);
+
+    // Calculate the index where the data should be stored
+    size_t index = rb->write;
+
+    // Copy data byte-by-byte into the buffer
+    for (size_t i = 0; i < rb->elementSize; ++i) {
+        buffer[(index * rb->elementSize) + i] = *((uint8_t*)data + i);
+    }
+
+    // Update the write index
+    rb->write = (index + 1) & rb->mask;
+
+    return true; // Data successfully added to the buffer
 }
 
-static bool rb_get(RingBuffer *rb, uint8_t *data){
-    //@Brief: Remove one byte from ring buffer if available
-    if(rb_empty(rb) == 1){return false;}
-    *data = rb->buf[rb->read];
-    rb->read = (rb->read + 1) & (rb->size -1); // bitmask wrap around
-    return true;
+// Core function for getting data from the buffer
+bool rbGet(RingBuffer *rb, void *data) {
+    if (rbEmpty(rb)) {
+        return false; // Buffer is empty, cannot retrieve data
+    }
+
+    uint8_t *buffer = (uint8_t*)(rb->buf);
+
+    // Calculate the index from where data should be retrieved
+    size_t index = rb->read;
+
+    // Copy data byte-by-byte from the buffer
+    for (size_t i = 0; i < rb->elementSize; ++i) {
+        *((uint8_t*)data + i) = buffer[(index * rb->elementSize) + i];
+    }
+
+    // Update the read index
+    rb->read = (index + 1) & rb->mask;
+
+    return true; // Data successfully retrieved from the buffer
 }
 
-static uint8_t rb_peek(const RingBuffer *rb){
-    //@Brief: Get one byte from ring buffer without moving read index
-    return rb->buf[rb->read];
+// Core function for peeking at the next data in the buffer
+bool rbPeek(const RingBuffer *rb, void *data) {
+    if (rbEmpty(rb)) {
+        return false; // Buffer is empty, cannot peek data
+    }
+
+    uint8_t *buffer = (uint8_t*)(rb->buf);
+
+    // Calculate the index of the next data to peek
+    size_t index = rb->read;
+
+    // Copy data byte-by-byte from the buffer
+    for (size_t i = 0; i < rb->elementSize; ++i) {
+        *((uint8_t*)data + i) = buffer[(index * rb->elementSize) + i];
+    }
+
+    return true; // Data peeked successfully
 }
+
+void rbClear(RingBuffer *rb) {
+    rb->write = rb->read = 0;
+}
+
+void rbFill(RingBuffer *rb, void *value) {
+    if (rb == NULL || value == NULL) {
+        return; // Check for NULL pointers
+    }
+
+    size_t element_size = rb->elementSize;
+    size_t buffer_size = rb->elementSize;
+    size_t total_size = element_size * buffer_size;
+
+    // Cast the value pointer to the appropriate type
+    uint8_t *fill_value_ptr = (uint8_t *)value;
+
+    // Iterate through the buffer and fill each element with the value
+    for (size_t i = 0; i < total_size; i += element_size) {
+        for (size_t j = 0; j < element_size; j++) {
+            *((uint8_t *)rb->buf + i + j) = fill_value_ptr[j];
+        }
+    }
+
+    rb->write = rb->read = 0; // Reset head and tail pointers
+}
+
 
 #endif // RING_BUFFER_H
