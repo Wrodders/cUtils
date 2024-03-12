@@ -47,6 +47,10 @@ static float _fabs(float f){
     return ( f > 0 ? f : -f);
 }
 
+static int _abs(int f){
+    return ( f > 0 ? f : -f);
+}
+
 static float _round(float number, int decimalPlaces) {
     int sign = (number < 0) ? -1 : 1; // Handle the sign 
     number = _fabs(number); // Work with the absolute value
@@ -175,10 +179,43 @@ static int itoa(char *buf, int num, int base){
     return i;
 }
 
+static int utoa(char *buf, unsigned int num, int base){
+    //@Brief: Converts unsigned integer to ASCII null-terminated String 
+    //@Returns: Len of string
+
+    int i = 0;
+
+    if(num == 0){
+        buf[i++] = '0';
+        buf[i] = '\0';
+        return i;
+    }
+
+    while(num !=0){
+        unsigned int rem = num % base;
+        buf[i++] = (rem > 9) ? (rem - 10) + 'a' : rem + '0';
+        num = num /base;
+    }
+
+    // Reverse the string
+    int left = 0;
+    int right = i - 1;
+    while (left < right) {
+        char temp = buf[left];
+        buf[left] = buf[right];
+        buf[right] = temp;
+        left++;
+        right--;
+    }
+    buf[i] = '\0';
+    return i;
+}
+
 enum formatState{
     TEXT,
     FLOAT, // f
     INT, // d
+    UINT,
     STR, //s
 };
 
@@ -201,6 +238,9 @@ static int mysprintf(char *buf, uint8_t dp, char *format, ...){
                 else if(format[fIdx] == '%' && format[fIdx + 1] == 'd'){
                     state = INT;
                     break;
+                }else if(format[fIdx] == '%' && format[fIdx + 1] == 'u'){
+                    state = UINT;
+                    break;
                 }
                 else if(format[fIdx] == '%' && format[fIdx + 1] == 's'){
                     state = STR;
@@ -222,6 +262,12 @@ static int mysprintf(char *buf, uint8_t dp, char *format, ...){
                 fIdx += 2;
                 break;  
             }       
+            case UINT: {
+                bIdx += utoa(&buf[bIdx], va_arg(args, unsigned int), 10);
+                state = TEXT;
+                fIdx += 2;
+                break;
+            }
             case STR: {
                 // must be null terminated
                 bIdx += uCpy(&buf[bIdx], va_arg(args, char *), 0); // copy unknown num chars
