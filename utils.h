@@ -77,7 +77,7 @@ static unsigned int uClen(const char *str){
     return len;
 }
 
-static unsigned int uCpy(char *buf, char *src, int len){
+static unsigned int uCpy(char *buf, const char *src, int len){
     //@Breif: Copys null-terminated string to buffer up to len
     //@Note: setting len to 0 will copy up to null null char
     //@Return: num bytes copied, 0 for failure
@@ -219,7 +219,7 @@ enum formatState{
     STR, //s
 };
 
-static int mysprintf(char *buf, uint8_t dp, char *format, ...){
+static int mysprintf(char *buf, uint8_t dp, const char *format, ...){
     va_list args;
     va_start(args, format);
     enum formatState state = TEXT;
