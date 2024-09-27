@@ -1,14 +1,13 @@
 #ifndef UTILS_H
 #define UTILS_H
 
-
 #ifndef uint8_t
 #include <stdint.h> 
 #endif  // UINT8_T_DEFINED
 
 #ifndef bool
 #include <stdbool.h>
-#endif // BOOL_DFINED
+#endif // BOOL_DEFINED
 
 #include <stdarg.h>
 // *** // MATH // **** // 
@@ -38,6 +37,11 @@ static float invSqrt(float x) {
 
 
 // *** // **** // Float Maniplation // **** // *** //
+
+static float _sign(float val) {
+    return (val > 0 ? 1:-1);
+}
+
 static float _clamp(float val, float min, float max){
     const float clamp = val < min ? min : val;
     return clamp > max ? max : clamp;
